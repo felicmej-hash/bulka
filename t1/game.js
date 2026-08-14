@@ -86,6 +86,7 @@
   const overlay = document.getElementById('overlay');
   const nameInput = document.getElementById('nameInput');
   const playBtn = document.getElementById('playBtn');
+  const touchControls = document.getElementById('touchControls');
 
   const DIR_VEC = {
     up: { x: 0, y: -1 },
@@ -124,6 +125,32 @@
     if (keys['arrowright'] || keys['d']) return 'right';
     return null;
   }
+
+  function bindTouchButton(el, keyName) {
+    if (!el) return;
+    const setKey = (value) => (e) => {
+      e.preventDefault();
+      keys[keyName] = value;
+    };
+    el.addEventListener('touchstart', setKey(true), { passive: false });
+    el.addEventListener('touchend', setKey(false), { passive: false });
+    el.addEventListener('touchcancel', setKey(false), { passive: false });
+    el.addEventListener('mousedown', setKey(true));
+    el.addEventListener('mouseup', setKey(false));
+    el.addEventListener('mouseleave', setKey(false));
+  }
+
+  function setupTouchControls() {
+    bindTouchButton(document.querySelector('.tup'), 'arrowup');
+    bindTouchButton(document.querySelector('.tdown'), 'arrowdown');
+    bindTouchButton(document.querySelector('.tleft'), 'arrowleft');
+    bindTouchButton(document.querySelector('.tright'), 'arrowright');
+    bindTouchButton(document.getElementById('fireBtn'), ' ');
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      touchControls.classList.remove('hidden');
+    }
+  }
+  setupTouchControls();
 
   async function api(action, payload) {
     const res = await fetch('api.php?action=' + action, {

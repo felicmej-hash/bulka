@@ -9,6 +9,10 @@ html, body {
   color: #eef2f7;
   font-family: "Segoe UI", Arial, sans-serif;
   overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #wrap {
@@ -18,6 +22,8 @@ html, body {
   justify-content: center;
   height: 100%;
   gap: 10px;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -32,11 +38,15 @@ h1 {
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   background: #1c2230;
+  width: min(600px, 94vw);
 }
 
 canvas {
   display: block;
   image-rendering: pixelated;
+  width: 100%;
+  height: auto;
+  touch-action: none;
 }
 
 #hud {
@@ -121,4 +131,70 @@ canvas {
 
 .hidden {
   display: none !important;
+}
+
+#touchControls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 18px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#dpad {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  pointer-events: auto;
+}
+
+.tbtn {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  border: 1px solid #3a4356;
+  background: rgba(28, 34, 48, 0.85);
+  color: #eef2f7;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tbtn:active {
+  background: rgba(231, 76, 60, 0.6);
+}
+
+.tup { top: 0; left: 50px; }
+.tleft { top: 50px; left: 0; }
+.tright { top: 50px; left: 100px; }
+.tdown { top: 100px; left: 50px; }
+
+.tfire {
+  position: static;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  pointer-events: auto;
+  background: rgba(231, 76, 60, 0.35);
+  border-color: #e74c3c;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.05rem;
+  }
+  #hud {
+    font-size: 0.75rem;
+    gap: 12px;
+  }
 }
