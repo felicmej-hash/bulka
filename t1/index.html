@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Танчики в лабиринте</title>
 <link rel="stylesheet" href="style.css">
@@ -20,6 +20,16 @@
     <div>💀 Убийства: <b id="kills">0</b></div>
     <div>👥 Игроков онлайн: <b id="online">1</b></div>
   </div>
+</div>
+
+<div id="touchControls" class="hidden">
+  <div id="dpad">
+    <button type="button" class="tbtn tup" aria-label="Вверх">▲</button>
+    <button type="button" class="tbtn tleft" aria-label="Влево">◀</button>
+    <button type="button" class="tbtn tright" aria-label="Вправо">▶</button>
+    <button type="button" class="tbtn tdown" aria-label="Вниз">▼</button>
+  </div>
+  <button type="button" id="fireBtn" class="tbtn tfire" aria-label="Огонь">🔥</button>
 </div>
 
 <div id="overlay">
