@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Танчики в лабиринте</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="wrap">
+  <h1>🎮 Танчики в лабиринте</h1>
+  <div id="stage">
+    <canvas id="game" width="600" height="440"></canvas>
+    <div id="respawn">💥 Вы уничтожены...</div>
+  </div>
+  <div id="hud">
+    <div>❤️ HP: <b id="hp">3</b></div>
+    <div>💀 Убийства: <b id="kills">0</b></div>
+    <div>👥 Игроков онлайн: <b id="online">1</b></div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="panel">
+    <h2>Танчики в лабиринте</h2>
+    <p>WASD или стрелки — движение<br>Пробел — выстрел</p>
+    <input id="nameInput" type="text" placeholder="Твоё имя" maxlength="16">
+    <button id="playBtn">Играть</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
