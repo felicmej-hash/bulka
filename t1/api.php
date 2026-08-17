@@ -50,21 +50,17 @@ $action = $_GET['action'] ?? ($body['action'] ?? '');
 switch ($action) {
     case 'join': {
         $id = bin2hex(random_bytes(6));
-        $colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#ecf0f1'];
-        $color = $colors[array_rand($colors)];
-        $spawn = is_array($body['spawn'] ?? null) ? $body['spawn'] : ['x' => 1, 'y' => 1];
         $name = trim(substr((string)($body['name'] ?? ''), 0, 16));
         if ($name === '') {
-            $name = 'Танк-' . substr($id, 0, 4);
+            $name = 'Игрок-' . substr($id, 0, 4);
         }
         $state['players'][$id] = [
             'id' => $id,
             'name' => $name,
-            'x' => (int)($spawn['x'] ?? 1),
-            'y' => (int)($spawn['y'] ?? 1),
-            'dir' => 'down',
-            'hp' => 3,
-            'color' => $color,
+            'x' => (float)($body['x'] ?? 1300),
+            'y' => (float)($body['y'] ?? 1300),
+            'angle' => 0,
+            'length' => 60,
             'kills' => 0,
             't' => $now,
         ];
@@ -77,24 +73,21 @@ switch ($action) {
         $id = (string)($body['id'] ?? '');
         if (isset($state['players'][$id])) {
             $p = $state['players'][$id];
-            if (isset($body['x'])) $p['x'] = (int)$body['x'];
-            if (isset($body['y'])) $p['y'] = (int)$body['y'];
-            if (isset($body['dir'])) $p['dir'] = (string)$body['dir'];
+            if (isset($body['x'])) $p['x'] = (float)$body['x'];
+            if (isset($body['y'])) $p['y'] = (float)$body['y'];
+            if (isset($body['angle'])) $p['angle'] = (float)$body['angle'];
+            if (isset($body['length'])) $p['length'] = (float)$body['length'];
             $p['t'] = $now;
 
-            $hitId = (string)($body['hitId'] ?? '');
-            if ($hitId !== '' && isset($state['players'][$hitId]) && $hitId !== $id) {
-                $state['players'][$hitId]['hp'] = (int)$state['players'][$hitId]['hp'] - 1;
-                if ($state['players'][$hitId]['hp'] <= 0) {
-                    $p['kills'] = (int)($p['kills'] ?? 0) + 1;
-                }
+            $killedBy = (string)($body['killedBy'] ?? '');
+            if ($killedBy !== '' && isset($state['players'][$killedBy]) && $killedBy !== $id) {
+                $state['players'][$killedBy]['kills'] = (int)($state['players'][$killedBy]['kills'] ?? 0) + 1;
             }
 
-            if (!empty($body['respawn'])) {
-                $sp = is_array($body['spawn'] ?? null) ? $body['spawn'] : ['x' => 1, 'y' => 1];
-                $p['hp'] = 3;
-                $p['x'] = (int)($sp['x'] ?? 1);
-                $p['y'] = (int)($sp['y'] ?? 1);
+            if (!empty($body['died'])) {
+                $p['length'] = 60;
+                if (isset($body['spawnX'])) $p['x'] = (float)$body['spawnX'];
+                if (isset($body['spawnY'])) $p['y'] = (float)$body['spawnY'];
             }
 
             $state['players'][$id] = $p;
