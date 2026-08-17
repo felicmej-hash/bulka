@@ -15,6 +15,7 @@
   const KILL_R = HEAD_R + 3;
   const BOT_COUNT = 10;
   const SKIP_OWN_SEGS = 4;
+  const SELF_SKIP = 22;
 
   const BRAND_SHADES = ['#20d0c4', '#17b8ac', '#3ee0d5'];
   const BRAND_ACCENT = '#0d1117';
@@ -269,18 +270,66 @@
   }
   for (let i = 0; i < BOT_COUNT; i++) bots.push(spawnBot());
 
-  function updateBot(b, dt) {
-    b.turnTimer -= dt;
-    if (b.turnTimer <= 0) {
-      b.targetAngle = b.angle + rand(-1.2, 1.2);
-      b.turnTimer = rand(1, 2.5);
+  function nearestFood(b, radius) {
+    let best = null;
+    let bestD = radius;
+    for (const f of food) {
+      const d = dist(b.x, b.y, f.x, f.y);
+      if (d < bestD) { bestD = d; best = f; }
     }
+    return best;
+  }
+
+  function botAvoidance(b) {
+    const lookDist = 45;
+    const lx = b.x + Math.cos(b.angle) * lookDist;
+    const ly = b.y + Math.sin(b.angle) * lookDist;
+    const threat = KILL_R + 12;
+
+    if (me && !dead) {
+      const mySegs = segmentsOf(me);
+      for (let i = 0; i < mySegs.length; i += 3) {
+        if (dist(lx, ly, mySegs[i].x, mySegs[i].y) < threat) {
+          return b.angle + (b.x + b.y > lx + ly ? 1 : -1) * 1.5;
+        }
+      }
+    }
+    for (const other of bots) {
+      if (other === b) continue;
+      const segs = segmentsOf(other);
+      for (let i = 0; i < segs.length; i += 4) {
+        if (dist(lx, ly, segs[i].x, segs[i].y) < threat) {
+          return b.angle + (b.x + b.y > lx + ly ? 1 : -1) * 1.5;
+        }
+      }
+    }
+    return null;
+  }
+
+  function updateBot(b, dt) {
+    let desired;
+    const targetFood = nearestFood(b, 260);
+    if (targetFood) {
+      desired = Math.atan2(targetFood.y - b.y, targetFood.x - b.x);
+    } else {
+      b.turnTimer -= dt;
+      if (b.turnTimer <= 0) {
+        b.targetAngle = b.angle + rand(-1.2, 1.2);
+        b.turnTimer = rand(1, 2.5);
+      }
+      desired = b.targetAngle;
+    }
+
     const margin = 120;
-    if (b.x < margin) b.targetAngle = 0;
-    else if (b.x > WORLD - margin) b.targetAngle = Math.PI;
-    else if (b.y < margin) b.targetAngle = Math.PI / 2;
-    else if (b.y > WORLD - margin) b.targetAngle = -Math.PI / 2;
-    stepSnake(b, dt, b.targetAngle);
+    if (b.x < margin) desired = 0;
+    else if (b.x > WORLD - margin) desired = Math.PI;
+    else if (b.y < margin) desired = Math.PI / 2;
+    else if (b.y > WORLD - margin) desired = -Math.PI / 2;
+
+    const avoid = botAvoidance(b);
+    if (avoid !== null) desired = avoid;
+
+    stepSnake(b, dt, desired);
     if (b.length < 400) b.length += dt * 0.6;
   }
 
@@ -443,6 +492,17 @@
 
       if (me.x <= 5 || me.x >= WORLD - 5 || me.y <= 5 || me.y >= WORLD - 5) {
         killMe(null);
+      }
+
+      // my head vs my own tail -> I die
+      if (!dead) {
+        const selfSegs = segmentsOf(me);
+        for (let i = SELF_SKIP; i < selfSegs.length; i++) {
+          if (dist(me.x, me.y, selfSegs[i].x, selfSegs[i].y) < KILL_R) {
+            killMe(null);
+            break;
+          }
+        }
       }
 
       // my head vs any bot's body -> I die
