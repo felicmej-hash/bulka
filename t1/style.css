@@ -37,6 +37,21 @@ canvas {
   color: #20d0c4;
 }
 
+#musicBtn {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 17, 23, 0.55);
+  border: 1px solid #2a323f;
+  color: #eef2f7;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  z-index: 4;
+}
+
 #leaderboard {
   position: fixed;
   top: 14px;

@@ -7,14 +7,56 @@
   const TURN_RATE = 4.2;
   const START_LEN = 60;
   const GROW_PER_FOOD = 6;
+  const GROW_PER_KILL = 15;
   const FOOD_COUNT = 220;
   const FOOD_R = 5;
   const HEAD_R = 9;
   const EAT_R = HEAD_R + FOOD_R;
   const KILL_R = HEAD_R + 3;
   const BOT_COUNT = 10;
-  const BRAND = '#20d0c4';
-  const BOT_COLORS = ['#8892a6', '#6c7686', '#a2adbd', '#7d8798', '#95a0b0'];
+  const SKIP_OWN_SEGS = 4;
+
+  const BRAND_SHADES = ['#20d0c4', '#17b8ac', '#3ee0d5'];
+  const BRAND_ACCENT = '#0d1117';
+  const BOT_SHADES = ['#8892a6', '#6c7686', '#a2adbd', '#7d8798', '#95a0b0'];
+  const BOT_ACCENT = '#3a4356';
+
+  const SLOGANS = [
+    'РОССИЯ ДЛЯ ЖИЗНИ',
+    'ЛЮДИ ВАЖНЕЕ',
+    'НЕЧАЕВ',
+    'ДАВАНКОВ',
+    'АВКСЕНТЬЕВА',
+    'РОССИЯ ЭТО ЛЮДИ',
+    'ЗДЕСЬ МИЛЛИОНЫ СУДЕБ',
+  ];
+
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+      h = (h * 31 + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function skinForId(id) {
+    const h = hashStr(id);
+    return {
+      base: BRAND_SHADES[h % BRAND_SHADES.length],
+      accent: BRAND_ACCENT,
+      textColor: '#0d1117',
+      slogan: SLOGANS[h % SLOGANS.length],
+    };
+  }
+
+  function skinForBot() {
+    return {
+      base: BOT_SHADES[Math.floor(Math.random() * BOT_SHADES.length)],
+      accent: BOT_ACCENT,
+      textColor: '#fff',
+      slogan: SLOGANS[Math.floor(Math.random() * SLOGANS.length)],
+    };
+  }
 
   // ---------- audio ----------
   let audioCtx = null;
@@ -58,6 +100,61 @@
     noise.start();
   }
 
+  // ---------- background music ----------
+  const MELODY = [
+    [523.25, 0.5], [659.25, 0.5], [783.99, 0.5], [659.25, 0.5],
+    [523.25, 0.5], [783.99, 0.5], [987.77, 0.5], [783.99, 0.5],
+    [587.33, 0.5], [739.99, 0.5], [880.0, 0.5], [739.99, 0.5],
+    [523.25, 0.5], [659.25, 0.5], [783.99, 1.0],
+  ];
+  const BASS = [130.81, 164.81, 196.0, 164.81];
+  let musicOn = false;
+  let musicGain = null;
+  let musicStep = 0;
+  let musicTimer = null;
+
+  function playNote(freq, dur, type, destGain, volMul) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t0 = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.5 * (volMul || 1), t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    osc.connect(g).connect(destGain);
+    osc.start(t0);
+    osc.stop(t0 + dur);
+  }
+
+  function musicStepFn() {
+    if (!musicOn || !audioCtx) return;
+    const beatSec = 60 / 128;
+    const [freq, dur] = MELODY[musicStep % MELODY.length];
+    playNote(freq, dur * beatSec, 'triangle', musicGain, 1);
+    if (musicStep % 2 === 0) {
+      const bass = BASS[Math.floor(musicStep / 2) % BASS.length];
+      playNote(bass, beatSec * 2, 'sine', musicGain, 0.5);
+    }
+    musicStep++;
+    musicTimer = setTimeout(musicStepFn, dur * beatSec * 1000);
+  }
+
+  function startMusic() {
+    if (!audioCtx || musicOn) return;
+    musicOn = true;
+    if (!musicGain) {
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = 0.06;
+      musicGain.connect(audioCtx.destination);
+    }
+    musicStepFn();
+  }
+
+  function stopMusic() {
+    musicOn = false;
+    clearTimeout(musicTimer);
+  }
+
   // ---------- dom ----------
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -69,6 +166,12 @@
   const overlay = document.getElementById('overlay');
   const nameInput = document.getElementById('nameInput');
   const playBtn = document.getElementById('playBtn');
+  const musicBtn = document.getElementById('musicBtn');
+
+  musicBtn.addEventListener('click', () => {
+    if (musicOn) { stopMusic(); musicBtn.textContent = '🔇'; }
+    else { startMusic(); musicBtn.textContent = '🔊'; }
+  });
 
   function resize() {
     canvas.width = window.innerWidth;
@@ -94,7 +197,7 @@
         x: rand(30, WORLD - 30),
         y: rand(30, WORLD - 30),
         r: FOOD_R,
-        color: Math.random() < 0.5 ? BRAND : '#ffffff',
+        color: Math.random() < 0.5 ? '#20d0c4' : '#ffffff',
       });
     }
   }
@@ -108,16 +211,16 @@
         x: Math.min(WORLD - 10, Math.max(10, x + Math.cos(a) * r)),
         y: Math.min(WORLD - 10, Math.max(10, y + Math.sin(a) * r)),
         r: FOOD_R,
-        color: Math.random() < 0.5 ? BRAND : '#ffffff',
+        color: Math.random() < 0.5 ? '#20d0c4' : '#ffffff',
       });
     }
   }
 
   // ---------- snake helpers ----------
-  function makeSnake(x, y, color, name, isBot) {
+  function makeSnake(x, y, skin, name, isBot) {
     return {
       x, y, angle: rand(0, Math.PI * 2), targetAngle: 0,
-      length: START_LEN, color, name, isBot: !!isBot,
+      length: START_LEN, skin, name, isBot: !!isBot,
       path: [{ x, y }],
     };
   }
@@ -160,8 +263,7 @@
   function spawnBot() {
     const x = rand(100, WORLD - 100);
     const y = rand(100, WORLD - 100);
-    const color = BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)];
-    const b = makeSnake(x, y, color, 'Бот', true);
+    const b = makeSnake(x, y, skinForBot(), 'Бот', true);
     b.turnTimer = rand(0.5, 2);
     return b;
   }
@@ -182,11 +284,12 @@
     if (b.length < 400) b.length += dt * 0.6;
   }
 
-  function killBot(b) {
+  function respawnBot(b) {
     burstFood(b.x, b.y, Math.min(20, Math.floor(b.length / 6)));
     const x = rand(100, WORLD - 100);
     const y = rand(100, WORLD - 100);
     b.x = x; b.y = y; b.length = START_LEN; b.path = [{ x, y }]; b.angle = rand(0, Math.PI * 2);
+    b.skin = skinForBot();
   }
 
   // ---------- player ----------
@@ -246,17 +349,19 @@
 
   async function doJoin() {
     initAudio();
+    startMusic();
     const name = nameInput.value.trim();
     const x = rand(200, WORLD - 200);
     const y = rand(200, WORLD - 200);
     const res = await api('join', { name, x, y });
     if (!res.ok) return;
     myId = res.id;
-    me = makeSnake(x, y, BRAND, res.players[myId].name, false);
+    me = makeSnake(x, y, skinForId(myId), res.players[myId].name, false);
     applyPlayers(res.players);
     overlay.classList.add('hidden');
     hud.classList.remove('hidden');
     leaderboard.classList.remove('hidden');
+    musicBtn.classList.remove('hidden');
     requestAnimationFrame(loop);
     startPolling();
     startKeepAlive();
@@ -340,13 +445,28 @@
         killMe(null);
       }
 
+      // my head vs any bot's body -> I die
       if (!dead) {
         for (const b of bots) {
           const segs = segmentsOf(b);
           for (let i = 3; i < segs.length; i++) {
             if (dist(me.x, me.y, segs[i].x, segs[i].y) < KILL_R) {
-              killBot(b);
-              me.length += 20;
+              killMe(null);
+              break;
+            }
+          }
+          if (dead) break;
+        }
+      }
+
+      // a bot's head vs my body -> that bot dies
+      if (!dead) {
+        const mySegs = segmentsOf(me);
+        for (const b of bots) {
+          for (let i = SKIP_OWN_SEGS; i < mySegs.length; i++) {
+            if (dist(b.x, b.y, mySegs[i].x, mySegs[i].y) < KILL_R) {
+              respawnBot(b);
+              me.length += GROW_PER_KILL;
               playKill();
               break;
             }
@@ -354,6 +474,7 @@
         }
       }
 
+      // my head vs other real players' body -> I die
       if (!dead) {
         for (const id in others) {
           const trail = othersPath[id];
@@ -396,26 +517,65 @@
     requestAnimationFrame(loop);
   }
 
-  function drawSnakeSegs(segs, color, thickness, label) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = thickness;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (let i = 0; i < segs.length; i++) {
-      const p = segs[i];
-      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
+  function drawSlogan(segs, text, color) {
+    if (!text || segs.length < 4) return;
     ctx.fillStyle = color;
+    ctx.font = 'bold 10px Segoe UI, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let ci = 0;
+    for (let i = segs.length - 3; i >= 1; i -= 2) {
+      const p = segs[i];
+      const q = segs[i + 1];
+      const angle = Math.atan2(p.y - q.y, p.x - q.x);
+      const ch = text[ci % text.length];
+      ci++;
+      if (ch === ' ') continue;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(angle);
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function drawSnake(segs, skin, thickness, label) {
+    for (let i = segs.length - 1; i >= 1; i--) {
+      const p = segs[i];
+      ctx.fillStyle = (i % 2 === 0) ? skin.base : skin.accent;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, thickness / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const head = segs[0];
+    ctx.fillStyle = skin.base;
     ctx.beginPath();
-    ctx.arc(segs[0].x, segs[0].y, thickness / 2 + 1, 0, Math.PI * 2);
+    ctx.arc(head.x, head.y, thickness / 2 + 2, 0, Math.PI * 2);
     ctx.fill();
+
+    if (segs.length > 2) {
+      const dx = head.x - segs[1].x;
+      const dy = head.y - segs[1].y;
+      const a = Math.atan2(dy, dx);
+      const ex = Math.cos(a + 0.6) * (thickness / 3);
+      const ey = Math.sin(a + 0.6) * (thickness / 3);
+      const ex2 = Math.cos(a - 0.6) * (thickness / 3);
+      const ey2 = Math.sin(a - 0.6) * (thickness / 3);
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(head.x + ex, head.y + ey, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(head.x + ex2, head.y + ey2, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.arc(head.x + ex, head.y + ey, 1.1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(head.x + ex2, head.y + ey2, 1.1, 0, Math.PI * 2); ctx.fill();
+    }
+
+    drawSlogan(segs, skin.slogan, skin.textColor);
+
     if (label) {
       ctx.fillStyle = '#fff';
       ctx.font = '11px Segoe UI, Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(label, segs[0].x, segs[0].y - 16);
+      ctx.fillText(label, head.x, head.y - thickness / 2 - 8);
     }
   }
 
@@ -469,15 +629,15 @@
     }
 
     for (const b of bots) {
-      drawSnakeSegs(segmentsOf(b), b.color, HEAD_R * 1.6, null);
+      drawSnake(segmentsOf(b), b.skin, HEAD_R * 1.6, null);
     }
 
     for (const id in others) {
-      drawSnakeSegs(otherSegments(id), BRAND, HEAD_R * 1.6, others[id].name);
+      drawSnake(otherSegments(id), skinForId(id), HEAD_R * 1.6, others[id].name);
     }
 
     if (!dead) {
-      drawSnakeSegs(segmentsOf(me), BRAND, HEAD_R * 1.8, null);
+      drawSnake(segmentsOf(me), me.skin, HEAD_R * 1.8, null);
     }
 
     ctx.restore();
