@@ -133,5 +133,5 @@ switch ($action) {
     }
 
     default:
-        respond(['error' => 'unknown_action'], 400);
+        respond(['error' => 'unknown_action']);
 }
