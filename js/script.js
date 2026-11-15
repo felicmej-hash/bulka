@@ -1,50 +1,63 @@
-document.addEventListener("DOMContentLoaded", function () {
-  var burger = document.querySelector(".burger");
-  var nav = document.querySelector("nav");
+"use strict";
 
-  if (burger && nav) {
-    burger.addEventListener("click", function () {
-      nav.classList.toggle("open");
-    });
+const hero = document.querySelector("[data-hero]");
+const mascot = document.querySelector("[data-mascot]");
 
-    nav.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        nav.classList.remove("open");
-      });
+if (hero && mascot) {
+  const greeting = document.querySelector("[data-greeting]");
+  const canTrack = window.matchMedia("(pointer: fine) and (prefers-reduced-motion: no-preference)");
+  const messages = ["Привет! Я Домовёнок.", "Есть минутка для сказки?", "Как здорово, что ты заглянул!"];
+  let messageIndex = 0;
+  let frame = 0;
+  let hideGreeting;
+  let resetNod;
+
+  hero.addEventListener("pointermove", (event) => {
+    if (!canTrack.matches || event.pointerType === "touch") return;
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      const rect = mascot.getBoundingClientRect();
+      const clamp = (value) => Math.max(-1, Math.min(1, value));
+      const x = clamp((event.clientX - rect.left - rect.width * 0.5) / (rect.width * 0.82));
+      const y = clamp((event.clientY - rect.top - rect.height * 0.36) / (rect.height * 0.65));
+      mascot.style.setProperty("--x", `${x * 9}px`);
+      mascot.style.setProperty("--y", `${y * 4}px`);
+      mascot.style.setProperty("--yaw", `${x * 11}deg`);
+      mascot.style.setProperty("--pitch", `${y * -6}deg`);
+      mascot.style.setProperty("--tilt", `${x * 5}deg`);
     });
+  });
+
+  function resetLook() {
+    cancelAnimationFrame(frame);
+    for (const property of ["--x", "--y", "--yaw", "--pitch", "--tilt"]) {
+      mascot.style.removeProperty(property);
+    }
   }
 
-  var mascot = document.getElementById("mascot");
-  if (mascot) {
-    var head = document.getElementById("mascot-head");
-    var eyes = [
-      { el: document.getElementById("mascot-pupil-l"), cx: 82, cy: 90 },
-      { el: document.getElementById("mascot-pupil-r"), cx: 118, cy: 90 },
-    ];
-    var maxPupil = 3;
-    var maxTilt = 6;
+  hero.addEventListener("pointerleave", resetLook);
+  canTrack.addEventListener("change", resetLook);
 
-    var track = function (clientX, clientY) {
-      var rect = mascot.getBoundingClientRect();
-      var originX = rect.left + rect.width / 2;
-      var originY = rect.top + rect.height / 2;
-      var dx = clientX - originX;
-      var dy = clientY - originY;
-      var dist = Math.hypot(dx, dy) || 1;
-      var nx = dx / dist;
-      var ny = dy / dist;
+  mascot.addEventListener("click", () => {
+    greeting.textContent = messages[messageIndex];
+    messageIndex = (messageIndex + 1) % messages.length;
+    mascot.classList.remove("is-greeting");
+    void mascot.offsetWidth;
+    mascot.classList.add("is-greeting");
+    clearTimeout(resetNod);
+    clearTimeout(hideGreeting);
+    resetNod = setTimeout(() => mascot.classList.remove("is-greeting"), 650);
+    hideGreeting = setTimeout(() => { greeting.textContent = ""; }, 3300);
+  });
+}
 
-      eyes.forEach(function (eye) {
-        eye.el.setAttribute("cx", eye.cx + nx * maxPupil);
-        eye.el.setAttribute("cy", eye.cy + ny * maxPupil);
-      });
-
-      var tilt = Math.max(-maxTilt, Math.min(maxTilt, dx / 40));
-      head.setAttribute("transform", "rotate(" + tilt + " 100 92)");
-    };
-
-    window.addEventListener("pointermove", function (e) {
-      track(e.clientX, e.clientY);
-    });
-  }
-});
+const gallery = document.querySelector("[data-gallery]");
+if (gallery) {
+  const choices = [...document.querySelectorAll("[data-view-choice]")];
+  choices.forEach((choice) => choice.addEventListener("click", () => {
+    const view = choice.dataset.viewChoice;
+    gallery.dataset.view = view;
+    gallery.setAttribute("aria-label", view === "front" ? "Булочка, вид спереди" : "Булочка, вид сбоку");
+    choices.forEach((button) => button.setAttribute("aria-pressed", String(button === choice)));
+  }));
+}
