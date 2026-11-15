@@ -273,9 +273,11 @@ nav a.active {
 
 .toys-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 28px;
   padding: 24px 0 64px;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .toy-card {
@@ -298,6 +300,26 @@ nav a.active {
 .toy-card .toy-icon svg {
   width: 96px;
   height: 96px;
+}
+
+.toy-card .toy-photo {
+  background: var(--cream-dark);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.toy-card .toy-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.toy-price {
+  margin-top: 14px;
+  font-family: "Comfortaa", sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--red);
 }
 
 .toy-card .toy-body {
