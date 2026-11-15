@@ -229,27 +229,14 @@ p { font-size: 1.05rem; line-height: 1.6; }
   align-items: center;
   gap: clamp(6px, 2vw, 22px);
   padding: 24px clamp(12px, 4vw, 58px);
-  border: 1px solid #dfad64;
-  border-radius: 30px;
-  background: radial-gradient(ellipse at 50% 10%, #fff3d5, #f4d399 75%);
-  box-shadow: 0 12px 28px #74441418;
-}
-.preorder-panel::before {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border: 1px dashed #ac7548;
-  border-radius: 23px;
-  pointer-events: none;
-  z-index: -1;
 }
 .preorder-content { position: relative; text-align: center; }
 .preorder-button {
-  min-height: 56px;
-  padding-inline: clamp(16px, 3vw, 32px);
+  min-height: 62px;
+  padding-inline: clamp(21px, 3.5vw, 38px);
   background: #432816;
   color: #fff7e8;
-  font-size: clamp(1.05rem, 2vw, 1.28rem);
+  font-size: clamp(1.12rem, 2.1vw, 1.36rem);
   box-shadow: 0 6px 0 #ba7948, 0 12px 24px #7543232e;
   transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
 }
@@ -257,7 +244,7 @@ p { font-size: 1.05rem; line-height: 1.6; }
 .preorder-button:active { transform: translateY(3px); box-shadow: 0 3px 0 #ba7948; }
 .preorder-content p { margin: 16px auto 0; color: #654021; font-size: .92rem; font-weight: 800; }
 .preorder-portrait {
-  width: min(100%, 126px);
+  width: min(100%, 148px);
   aspect-ratio: 1;
   justify-self: center;
   border-radius: 50%;
@@ -267,10 +254,9 @@ p { font-size: 1.05rem; line-height: 1.6; }
 .preorder-kolobok { background: #f5efe4 url("../img/toys/bulochka.jpg") left center / 200% auto no-repeat; transform: rotate(-8deg); }
 .preorder-kuzya { background: #f2e9dd url("../img/toys/domovenok.jpg") center 29% / 108% auto no-repeat; transform: rotate(8deg); }
 @media (max-width: 540px) {
-  .preorder-panel { grid-template-columns: 1fr 1fr; padding-block: 17px 22px; border-radius: 24px; }
-  .preorder-panel::before { border-radius: 17px; }
+  .preorder-panel { grid-template-columns: 1fr 1fr; padding-block: 17px 22px; }
   .preorder-content { grid-row: 2; grid-column: 1 / -1; padding-top: 6px; }
-  .preorder-portrait { width: 60px; border-width: 3px; }
+  .preorder-portrait { width: 72px; border-width: 3px; }
   .preorder-kolobok { justify-self: end; margin-right: 8px; }
   .preorder-kuzya { justify-self: start; margin-left: 8px; }
 }
