@@ -399,6 +399,38 @@ footer p {
   margin: 6px 0;
 }
 
+.grant-attribution {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px 22px;
+  margin: 24px auto 0;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.grant-attribution img {
+  height: 46px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.grant-attribution p {
+  margin: 0;
+  color: #444;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .grant-attribution {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .grid-4 {
