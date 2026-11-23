@@ -1,7 +1,14 @@
 .footer .grant-support{max-width:960px;margin:0 auto;padding:12px 0 36px;text-align:center}
-.footer .grant-support-logos{display:flex;align-items:center;justify-content:center;gap:clamp(32px,6vw,80px);margin:0 auto 28px;isolation:isolate}
-.footer .grant-support-logos img{display:block;height:auto;max-width:100%;object-fit:contain;mix-blend-mode:multiply;background:transparent;border:0;border-radius:0;padding:0}
+.footer .grant-support-logos{display:flex;align-items:center;justify-content:center;gap:clamp(32px,6vw,80px);margin:0 auto 28px}
+.footer .grant-support-logos img{display:block;height:auto;max-width:100%;object-fit:contain;mix-blend-mode:normal;background:transparent;border:0;border-radius:0;padding:0}
 .footer .grant-support-logos .grant-support-fund{width:340px}
 .footer .grant-support-logos .grant-support-platform{width:280px}
 .footer .grant-support p{max-width:860px;margin:0 auto;color:#493120;font-size:clamp(16px,1.3vw,18px);line-height:1.75;text-align:center}
 @media(max-width:600px){.footer .grant-support{padding:8px 0 28px}.footer .grant-support-logos{flex-direction:column;gap:24px;margin-bottom:26px}.footer .grant-support-logos .grant-support-fund{width:min(100%,300px)}.footer .grant-support-logos .grant-support-platform{width:min(85%,235px)}}
+
+.mascot-fallback{object-fit:contain;border-radius:0}
+@supports(clip-path:inset(0)){
+.mascot-body,.mascot-head{background-image:url("../img/toys/kuzya-transparent-v2.png");background-size:100% 100%;}
+.mascot-body{clip-path:inset(46% 0 0);mask-image:linear-gradient(to bottom,transparent 46%,#000 49%);}
+.mascot-head{clip-path:inset(0 0 50%);transform-origin:50% 46%;}
+}
